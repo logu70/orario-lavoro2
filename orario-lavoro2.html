@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orario di Lavoro</title>
+    <link rel="icon" type="image/png" href="icons8-orologio-color-32.png">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f0f2f5;
+            --card: #ffffff;
+            --card-alt: #f8f9fb;
+            --text: #1a1d23;
+            --text-muted: #6b7280;
+            --accent: #2563eb;
+            --accent-light: #dbeafe;
+            --accent-dark: #1d4ed8;
+            --green: #059669;
+            --green-light: #d1fae5;
+            --green-bg: #ecfdf5;
+            --orange: #d97706;
+            --orange-light: #fef3c7;
+            --orange-bg: #fffbeb;
+            --red: #dc2626;
+            --red-light: #fee2e2;
+            --red-bg: #fef2f2;
+            --border: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.06), 0 4px 10px rgba(0,0,0,0.04);
+            --radius: 14px;
+            --radius-sm: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 24px 16px;
+        }
+
+        .app-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .app-header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+
+        .app-header .live-clock {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .app-header .live-clock .seconds {
+            font-size: 0.75rem;
+            opacity: 0.5;
+        }
+
+        .layout {
+            max-width: 860px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header .icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .card-header .icon.blue { background: var(--accent-light); }
+        .card-header .icon.green { background: var(--green-light); }
+
+        .card-header h2 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .card-body {
+            padding: 16px 20px 20px;
+        }
+
+        /* --- Form Inputs --- */
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field:last-child {
+            margin-bottom: 0;
+        }
+
+        .field label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 6px;
+        }
+
+        .field input[type="time"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text);
+            background: var(--card-alt);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        .field input[type="time"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+            background: #fff;
+        }
+
+        .time-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 16px 0;
+        }
+
+        /* --- Breaks --- */
+        .break-item {
+            position: relative;
+            background: var(--card-alt);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            margin-bottom: 10px;
+            animation: slideIn 0.25s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .break-item .break-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .break-item .break-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .break-item .break-duration {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: var(--accent-light);
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        .btn-delete-break {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            background: var(--red);
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            line-height: 1;
+        }
+
+        .btn-delete-break:hover {
+            transform: scale(1.15);
+        }
+
+        .btn-add-break {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-sm);
+            background: transparent;
+            color: var(--accent);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 4px;
+        }
+
+        .btn-add-break:hover {
+            border-color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        /* --- Results --- */
+        .result-block {
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 14px;
+            transition: background 0.4s;
+        }
+
+        .result-block:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-block.meal {
+            background: var(--green-bg);
+            border: 1px solid #a7f3d0;
+        }
+
+        .result-block.full {
+            background: var(--accent-light);
+            border: 1px solid #93c5fd;
+        }
+
+        .result-block .result-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .result-block .result-label .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .result-block.meal .dot { background: var(--green); }
+        .result-block.full .dot { background: var(--accent); }
+
+        .result-exit-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 10px;
+        }
+
+        .result-block.meal .result-exit-time { color: var(--green); }
+        .result-block.full .result-exit-time { color: var(--accent-dark); }
+
+        .result-remaining {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .result-remaining .remaining-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .remaining-value.positive { color: var(--green); }
+        .remaining-value.warning { color: var(--orange); }
+        .remaining-value.urgent { color: var(--red); }
+        .remaining-value.done { color: var(--green); }
+
+        /* Progress bar */
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            background: rgba(0,0,0,0.06);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.8s ease, background 0.4s;
+            min-width: 0%;
+        }
+
+        .result-block.meal .progress-fill { background: var(--green); }
+        .result-block.full .progress-fill { background: var(--accent); }
+        .progress-fill.complete { background: var(--green) !important; }
+
+        /* Status badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .status-badge.active {
+            background: var(--green-light);
+            color: var(--green);
+        }
+
+        .status-badge.done {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        /* --- Summary row --- */
+        .summary-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .summary-item {
+            background: var(--card-alt);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+            text-align: center;
+        }
+
+        .summary-item .summary-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 4px;
+        }
+
+        .summary-item .summary-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 700px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            body {
+                padding: 16px 10px;
+            }
+
+            .app-header h1 {
+                font-size: 1.3rem;
+            }
+
+            .result-exit-time {
+                font-size: 1.6rem;
+            }
+        }
+
+        /* Pulse animation for live indicator */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            display: inline-block;
+            animation: pulse 2s ease infinite;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-header">
+    <h1>⏱ Orario di Lavoro</h1>
+    <div class="live-clock"><span class="live-dot"></span> <span id="liveClock">--:--</span></div>
+</div>
+
+<div class="layout">
+    <!-- LEFT: Input Form -->
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <div class="icon blue">🕐</div>
+                <h2>Orari</h2>
+            </div>
+            <div class="card-body">
+                <div class="field">
+                    <label>Orario di arrivo</label>
+                    <input type="time" id="arrivalTime" value="07:30">
+                </div>
+                <div class="section-divider"></div>
+                <div class="field">
+                    <label>Pausa pranzo</label>
+                    <div class="time-row">
+                        <input type="time" id="lunchStartTime" value="12:00" placeholder="Inizio">
+                        <input type="time" id="lunchEndTime" value="12:30" placeholder="Fine">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 16px;">
+            <div class="card-header">
+                <div class="icon green">🚶</div>
+                <h2>Uscite Brevi</h2>
+            </div>
+            <div class="card-body">
+                <div id="breaksContainer"></div>
+                <button type="button" class="btn-add-break" onclick="addBreak()">+ Aggiungi uscita breve</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Results -->
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <div class="icon blue">📊</div>
+                <h2>Riepilogo</h2>
+            </div>
+            <div class="card-body">
+                <div class="summary-row">
+                    <div class="summary-item">
+                        <div class="summary-label">Ore lavorate</div>
+                        <div class="summary-value" id="workedTime">0:00</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Pausa totale</div>
+                        <div class="summary-value" id="totalBreaks">0:30</div>
+                    </div>
+                </div>
+
+                <!-- Meal Voucher -->
+                <div class="result-block meal" id="mealBlock">
+                    <div class="result-label"><span class="dot"></span> Buono Pasto (6h effettive)</div>
+                    <div class="result-exit-time" id="mealVoucherTime">--:--</div>
+                    <div class="result-remaining">
+                        <span id="mealStatus"></span>
+                        <span class="remaining-value" id="mealVoucherRemaining">--:--</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" id="mealProgress" style="width:0%"></div>
+                    </div>
+                </div>
+
+                <!-- 7:12 Full Day -->
+                <div class="result-block full" id="fullBlock">
+                    <div class="result-label"><span class="dot"></span> Giornata Completa (7h12 effettive)</div>
+                    <div class="result-exit-time" id="sevenTwelveTime">--:--</div>
+                    <div class="result-remaining">
+                        <span id="fullStatus"></span>
+                        <span class="remaining-value" id="sevenTwelveRemaining">--:--</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" id="fullProgress" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- Utility functions ---
+function parseTime(timeStr) {
+    if (!timeStr) return null;
+    const [h, m] = timeStr.split(':').map(Number);
+    return h * 60 + m;
+}
+
+function formatTime(totalMinutes) {
+    const sign = totalMinutes < 0 ? '-' : '';
+    const abs = Math.abs(totalMinutes);
+    const h = Math.floor(abs / 60);
+    const m = abs % 60;
+    return `${sign}${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+}
+
+function formatTimeHM(totalMinutes) {
+    const abs = Math.abs(totalMinutes);
+    const h = Math.floor(abs / 60);
+    const m = abs % 60;
+    if (h === 0) return `${m}min`;
+    if (m === 0) return `${h}h`;
+    return `${h}h ${m}min`;
+}
+
+function getNowMinutes() {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
+}
+
+// --- Live clock ---
+function updateClock() {
+    const now = new Date();
+    const h = now.getHours().toString().padStart(2, '0');
+    const m = now.getMinutes().toString().padStart(2, '0');
+    const s = now.getSeconds().toString().padStart(2, '0');
+    document.getElementById('liveClock').innerHTML = `${h}:${m}<span class="seconds">:${s}</span>`;
+}
+
+// --- Break management ---
+let breakCount = 0;
+
+function addBreak(startVal, endVal) {
+    breakCount++;
+    const container = document.getElementById('breaksContainer');
+    const div = document.createElement('div');
+    div.className = 'break-item';
+    div.id = `break-${breakCount}`;
+    div.innerHTML = `
+        <button type="button" class="btn-delete-break" onclick="deleteBreak('break-${breakCount}')">×</button>
+        <div class="break-header">
+            <span class="break-label">Uscita breve #${container.children.length + 1}</span>
+            <span class="break-duration" id="break-dur-${breakCount}">0 min</span>
+        </div>
+        <div class="time-row">
+            <input type="time" class="shortBreakStart" value="${startVal || ''}" onchange="calculate()" oninput="calculate()">
+            <input type="time" class="shortBreakEnd" value="${endVal || ''}" onchange="calculate()" oninput="calculate()">
+        </div>
+    `;
+    container.appendChild(div);
+    calculate();
+    saveState();
+}
+
+function deleteBreak(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(-8px)';
+        el.style.transition = 'all 0.2s ease';
+        setTimeout(() => {
+            el.remove();
+            renumberBreaks();
+            calculate();
+            saveState();
+        }, 200);
+    }
+}
+
+function renumberBreaks() {
+    document.querySelectorAll('#breaksContainer .break-item').forEach((item, i) => {
+        item.querySelector('.break-label').textContent = `Uscita breve #${i + 1}`;
+    });
+}
+
+// --- Calculation ---
+function calculate() {
+    const arrival = parseTime(document.getElementById('arrivalTime').value);
+    if (arrival === null) return;
+
+    const lunchStart = parseTime(document.getElementById('lunchStartTime').value);
+    const lunchEnd = parseTime(document.getElementById('lunchEndTime').value);
+    let lunchDuration = (lunchStart !== null && lunchEnd !== null) ? Math.max(0, lunchEnd - lunchStart) : 30;
+
+    let shortBreaksDuration = 0;
+    const starts = document.querySelectorAll('.shortBreakStart');
+    const ends = document.querySelectorAll('.shortBreakEnd');
+    starts.forEach((startInput, i) => {
+        const s = parseTime(startInput.value);
+        const e = parseTime(ends[i].value);
+        if (s !== null && e !== null && e > s) {
+            const dur = e - s;
+            shortBreaksDuration += dur;
+            // Update break duration badge
+            const item = startInput.closest('.break-item');
+            if (item) {
+                const durEl = item.querySelector('[id^="break-dur"]');
+                if (durEl) durEl.textContent = `${dur} min`;
+            }
+        }
+    });
+
+    const totalBreaks = lunchDuration + shortBreaksDuration;
+    const mealExit = arrival + 6 * 60 + totalBreaks;
+    const fullExit = arrival + 7 * 60 + 12 + totalBreaks;
+    const now = getNowMinutes();
+
+    // Worked time calculation (effective, excluding breaks)
+    let workedMinutes = 0;
+    if (now > arrival) {
+        workedMinutes = now - arrival;
+        // Subtract lunch if past lunch
+        if (lunchStart !== null && lunchEnd !== null) {
+            if (now >= lunchEnd) {
+                workedMinutes -= lunchDuration;
+            } else if (now > lunchStart) {
+                workedMinutes -= (now - lunchStart);
+            }
+        }
+        // Subtract short breaks
+        starts.forEach((startInput, i) => {
+            const s = parseTime(startInput.value);
+            const e = parseTime(ends[i].value);
+            if (s !== null && e !== null && e > s) {
+                if (now >= e) {
+                    workedMinutes -= (e - s);
+                } else if (now > s) {
+                    workedMinutes -= (now - s);
+                }
+            }
+        });
+        workedMinutes = Math.max(0, workedMinutes);
+    }
+
+    // Update summary
+    document.getElementById('workedTime').textContent = formatTimeHM(workedMinutes);
+    document.getElementById('totalBreaks').textContent = formatTimeHM(totalBreaks);
+
+    // Update exit times
+    document.getElementById('mealVoucherTime').textContent = formatTime(mealExit);
+    document.getElementById('sevenTwelveTime').textContent = formatTime(fullExit);
+
+    // Remaining
+    const mealRemaining = mealExit - now;
+    const fullRemaining = fullExit - now;
+
+    updateRemaining('mealVoucherRemaining', 'mealStatus', mealRemaining, 'mealProgress', 6 * 60, workedMinutes);
+    updateRemaining('sevenTwelveRemaining', 'fullStatus', fullRemaining, 'fullProgress', 7 * 60 + 12, workedMinutes);
+
+    saveState();
+}
+
+function updateRemaining(remainingId, statusId, remaining, progressId, targetMinutes, workedMinutes) {
+    const el = document.getElementById(remainingId);
+    const statusEl = document.getElementById(statusId);
+    const progressEl = document.getElementById(progressId);
+
+    if (remaining <= 0) {
+        const overtime = Math.abs(remaining);
+        el.textContent = `+${formatTimeHM(overtime)}`;
+        el.className = 'remaining-value done';
+        statusEl.innerHTML = '<span class="status-badge done">✓ Completato</span>';
+        progressEl.style.width = '100%';
+        progressEl.classList.add('complete');
+    } else {
+        el.textContent = `-${formatTimeHM(remaining)}`;
+        statusEl.innerHTML = '<span class="status-badge active"><span class="live-dot"></span> In corso</span>';
+        progressEl.classList.remove('complete');
+
+        // Color based on remaining time
+        if (remaining <= 15) {
+            el.className = 'remaining-value urgent';
+        } else if (remaining <= 45) {
+            el.className = 'remaining-value warning';
+        } else {
+            el.className = 'remaining-value positive';
+        }
+
+        // Progress
+        const progress = Math.min(100, Math.max(0, (workedMinutes / targetMinutes) * 100));
+        progressEl.style.width = progress + '%';
+    }
+}
+
+// --- Persistence ---
+function saveState() {
+    try {
+        const state = {
+            arrival: document.getElementById('arrivalTime').value,
+            lunchStart: document.getElementById('lunchStartTime').value,
+            lunchEnd: document.getElementById('lunchEndTime').value,
+            breaks: []
+        };
+        document.querySelectorAll('.break-item').forEach(item => {
+            const s = item.querySelector('.shortBreakStart')?.value || '';
+            const e = item.querySelector('.shortBreakEnd')?.value || '';
+            state.breaks.push({ start: s, end: e });
+        });
+        localStorage.setItem('orario-lavoro', JSON.stringify(state));
+    } catch(e) {}
+}
+
+function loadState() {
+    try {
+        const raw = localStorage.getItem('orario-lavoro');
+        if (!raw) return;
+        const state = JSON.parse(raw);
+        if (state.arrival) document.getElementById('arrivalTime').value = state.arrival;
+        if (state.lunchStart) document.getElementById('lunchStartTime').value = state.lunchStart;
+        if (state.lunchEnd) document.getElementById('lunchEndTime').value = state.lunchEnd;
+        if (state.breaks && state.breaks.length) {
+            state.breaks.forEach(b => addBreak(b.start, b.end));
+        }
+    } catch(e) {}
+}
+
+// --- Event listeners ---
+document.addEventListener('DOMContentLoaded', () => {
+    loadState();
+    calculate();
+    updateClock();
+
+    document.querySelectorAll('#arrivalTime, #lunchStartTime, #lunchEndTime').forEach(input => {
+        input.addEventListener('input', calculate);
+        input.addEventListener('change', calculate);
+    });
+
+    setInterval(() => {
+        calculate();
+        updateClock();
+    }, 1000);
+});
+</script>
+</body>
+</html>
